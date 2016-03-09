@@ -13,7 +13,7 @@ var (
 	Version                                                      = "dev"
 	url, channel, text                                           string
 	fallback, color, pretext, title, title_link, attachment_text string
-	fields                                                       cli.StringSlice
+	fields, color_map                                            cli.StringSlice
 )
 
 func main() {
@@ -85,6 +85,11 @@ func main() {
 					Usage: "Fields are defined as an array, and hashes contained within it will be displayed in a table inside the message attachment",
 					Value: &fields,
 				},
+				cli.StringSliceFlag{
+					Name:  "color_map",
+					Usage: "Map colors. If you pass --color AWESOME you can map this name to the real color using this mapper. Ex: --color_map AWESOME:danger",
+					Value: &color_map,
+				},
 			},
 		},
 	}
@@ -108,6 +113,17 @@ func sendCommand(ctx *cli.Context) {
 	// Normalize
 	if channel[0] != '#' {
 		channel = "#" + channel
+	}
+
+	if color != "" {
+		for _, colorRemap := range color_map {
+			kv := strings.SplitN(colorRemap, ":", 2)
+			if len(kv) > 1 && kv[0] != "" && kv[1] != "" {
+				if kv[0] == color {
+					color = kv[1]
+				}
+			}
+		}
 	}
 
 	attach := Attachment{
